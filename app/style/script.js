@@ -1,6 +1,9 @@
-function selectImage(imageName) {
-    document.getElementById('selected-image').innerText = imageName;
+function selectImage(imageNumber) {
+    const imagePath = `/test_images/${imageNumber}.jpg`;
+    const selectedImageElement = document.getElementById('selected-image-display');
+    selectedImageElement.src = imagePath;
 }
+
 
 async function editImage() {
     const imageName = document.getElementById('selected-image').innerText;
