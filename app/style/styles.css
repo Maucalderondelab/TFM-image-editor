@@ -1,5 +1,7 @@
 body {
     font-family: Arial, sans-serif;
+    margin: 0; /* Ensure no default margin */
+    padding: 0; /* Ensure no default padding */
 }
 
 .container {
@@ -13,25 +15,30 @@ body {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     background-color: #f0f0f0;
+    padding: 20px;
 }
 
 .image-item {
-    width: 256px;
+    width: 100%; /* Ensure each image item takes full width of its container */
     height: 256px;
-    background-color: #f0f0f0;
+    background-color: #660404;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid #ccc;
     cursor: pointer;
     overflow: hidden;
-    flex-direction: column;
+    flex-direction: column; /* Align text content properly */
+    position: relative; /* Ensure proper positioning */
 }
 
 .image-item img {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    position: absolute; /* Ensure image covers entire div */
+    top: 0;
+    left: 0;
 }
 
 .editor {
@@ -41,18 +48,25 @@ body {
     width: 50%;
 }
 
-#selected-image {
+.selected-image {
     width: 300px;
     height: 300px;
-    background-color: #f0f0f0;
+    background-color: #110dd8;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid #ccc;
     margin-bottom: 20px;
+    position: relative; /* Ensure proper positioning */
 }
 
-#prompt {
+.selected-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.prompt {
     width: 80%;
     padding: 10px;
     margin-bottom: 20px;
