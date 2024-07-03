@@ -1,139 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM fully loaded and parsed");
+    const imageGallery = document.getElementById('image-gallery');
+    const selectedImageDisplay = document.getElementById('selected-image-display');
+    const editForm = document.getElementById('edit-form');
+    const selectedImageNameInput = document.getElementById('selected-image-name');
+    const applyEffectButton = document.getElementById('apply-effect-button');
+    const editedResults = document.getElementById('edited-results');
 
-    const images = document.querySelectorAll('.image-item');
-    console.log("Found images:", images);
-
-    images.forEach(image => {
-        image.addEventListener('click', () => {
-            const imageNumber = image.getAttribute('data-image').split(' ')[1]; // Extract number from data-image attribute
-            console.log("Image item clicked:", imageNumber);
-            selectImage(imageNumber);
-        });
-    });
-
-    const promptInput = document.getElementById('prompt');
-    promptInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            editImage();
-        }
-    });
-});
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM fully loaded and parsed");
-
-    const images = document.querySelectorAll('.image-item');
-    console.log("Found images:", images);
-
-    images.forEach(image => {
-        image.addEventListener('click', () => {
-            const imageNumber = image.getAttribute('data-image').split(' ')[1]; // Extract number from data-image attribute
-            console.log("Image item clicked:", imageNumber);
-            selectImage(imageNumber);
-        });
-    });
-
-    const promptInput = document.getElementById('prompt');
-    promptInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            editImage();
-        }
-    });
-});
-
-function selectImage(imageNumber) {
-    console.log("Selected image number:", imageNumber); // Print the imageNumber for debugging
-    const imagePath = `/test_images/${imageNumber}.jpg`;
-    const selectedImageElement = document.getElementById('selected-image-display');
-    console.log("Image path:", imagePath); // Debug the image path
-    if (selectedImageElement) {
-        console.log("Found selected-image-display element");
-        selectedImageElement.src = imagePath;
-        console.log("Image source set to:", imagePath);
-    } else {
-        console.error('Element with ID "selected-image-display" not found');
-    }
-}
-
-async function editImage() {
-    const selectedImageElement = document.getElementById('selected-image-display');
-    const imageName = selectedImageElement.src.split('/').pop();
-    const prompt = document.getElementById('prompt').value;
-
-    if (!imageName || prompt === "") {
-        alert("Please select an image and enter a prompt");
-        return;
+    // Function to fetch and display images
+    function fetchImages() {
+        fetch('/images')
+            .then(response => response.json())
+            .then(images => {
+                imageGallery.innerHTML = ''; // Clear existing images
+                images.forEach((image) => {
+                    const imageItem = document.createElement('div');
+                    imageItem.classList.add('image-item');
+                    imageItem.innerHTML = `
+                        <img src="/test_images/${image}" alt="${image}">
+                        <div>${image}</div>
+                    `;
+                    imageItem.addEventListener('click', () => selectImage(image));
+                    imageGallery.appendChild(imageItem);
+                });
+            })
+            .catch(error => console.error('Error fetching images:', error));
     }
 
-    try {
-        const response = await fetch('/edit-image', {
+    // Function to handle image selection
+    function selectImage(image) {
+        selectedImageDisplay.src = `/test_images/${image}`;
+        selectedImageDisplay.alt = image;
+        selectedImageNameInput.value = image;
+    }
+
+    // Function to apply black and white effect
+    function applyBlackAndWhiteEffect(event) {
+        event.preventDefault();
+        const formData = new FormData(editForm);
+
+        fetch('/edit-image', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ imageName, prompt })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const editedImages = await response.json();
-
-        document.getElementById('e-image-1').innerText = editedImages[0];
-        document.getElementById('e-image-2').innerText = editedImages[1];
-        document.getElementById('e-image-3').innerText = editedImages[2];
-        document.getElementById('e-image-4').innerText = editedImages[3];
-    } catch (error) {
-        console.error('Error editing image:', error);
-        alert('Failed to edit image. Please try again.');
-    }
-}
-function selectImage(imageNumber) {
-    console.log("Selected image number:", imageNumber); // Print the imageNumber for debugging
-    const imagePath = `/test_images/${imageNumber}.jpg`;
-    const selectedImageElement = document.getElementById('selected-image-display');
-    console.log("Image path:", imagePath); // Debug the image path
-    if (selectedImageElement) {
-        console.log("Found selected-image-display element");
-        selectedImageElement.src = imagePath;
-        console.log("Image source set to:", imagePath);
-    } else {
-        console.error('Element with ID "selected-image-display" not found');
-    }
-}
-
-async function editImage() {
-    const selectedImageElement = document.getElementById('selected-image-display');
-    const imageName = selectedImageElement.src.split('/').pop();
-    const prompt = document.getElementById('prompt').value;
-
-    if (!imageName || prompt === "") {
-        alert("Please select an image and enter a prompt");
-        return;
+            body: formData
+        })
+        .then(response => response.text())
+        .then(editedImageUrl => {
+            // Add the edited image to the results
+            const editedItem = document.createElement('div');
+            editedItem.classList.add('edited-item');
+            editedItem.innerHTML = `<img src="${editedImageUrl}" alt="Edited Image">`;
+            editedResults.appendChild(editedItem);
+        })
+        .catch(error => console.error('Error applying effect:', error));
     }
 
-    try {
-        const response = await fetch('/edit-image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ imageName, prompt })
-        });
+    // Fetch and display images on page load
+    fetchImages();
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const editedImages = await response.json();
-
-        document.getElementById('e-image-1').innerText = editedImages[0];
-        document.getElementById('e-image-2').innerText = editedImages[1];
-        document.getElementById('e-image-3').innerText = editedImages[2];
-        document.getElementById('e-image-4').innerText = editedImages[3];
-    } catch (error) {
-        console.error('Error editing image:', error);
-        alert('Failed to edit image. Please try again.');
-    }
-}
+    // Event listener for the edit form submission
+    editForm.addEventListener('submit', applyBlackAndWhiteEffect);
+});

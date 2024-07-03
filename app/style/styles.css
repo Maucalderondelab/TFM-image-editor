@@ -1,89 +1,192 @@
+/* General body styling */
 body {
     font-family: Arial, sans-serif;
-    margin: 0; /* Ensure no default margin */
-    padding: 0; /* Ensure no default padding */
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
 }
 
-.container {
+/* Header styling */
+header {
     display: flex;
     justify-content: space-between;
     padding: 20px;
 }
 
+/* Container to hold the image gallery and editor */
+.container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Image gallery styling */
 .image-gallery {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(6, 1fr);
     gap: 10px;
     background-color: #f0f0f0;
     padding: 20px;
+    width: 65%;
+    height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
 }
 
+/* Image gallery item styling */
 .image-item {
-    width: 100%; /* Ensure each image item takes full width of its container */
-    height: 256px;
-    background-color: #660404;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ccc;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     overflow: hidden;
-    flex-direction: column; /* Align text content properly */
-    position: relative; /* Ensure proper positioning */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.image-item:hover {
+    transform: scale(1.05);
 }
 
 .image-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    position: absolute; /* Ensure image covers entire div */
-    top: 0;
-    left: 0;
 }
 
+/* Styling for image item text */
+.image-item div {
+    padding: 5px;
+    text-align: center;
+}
+
+/* Editor section styling */
 .editor {
+    width: 35%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 50%;
+    gap: 20px;
 }
 
-.selected-image {
-    width: 300px;
-    height: 300px;
-    background-color: #110dd8;
+/* Selected image container styling */
+#selected-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 2px solid #007BFF;
+    border-radius: 4px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #ccc;
-    margin-bottom: 20px;
-    position: relative; /* Ensure proper positioning */
+    background-color: #fff;
 }
 
-.selected-image img {
+/* Selected image styling with default state */
+#selected-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.prompt {
-    width: 80%;
+/* Black and white effect class */
+.black-and-white {
+    filter: grayscale(100%);
+}
+
+/* Input styling */
+input[type="text"] {
     padding: 10px;
-    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.edited-results {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+/* Button styling */
+#apply-effect-button, #prompt-saved-button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-.edited-item {
-    width: 140px;
-    height: 140px;
-    background-color: #e0e0e0;
+#apply-effect-button:hover, #prompt-saved-button:hover {
+    background-color: #0056b3;
+}
+
+/* Edited results section styling */
+#image-edited, .edited-results {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Edited item styling */
+.edited-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    text-align: center;
+    color: #333;
+}
+
+.edited-item img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* Focus styles for accessibility */
+button:focus, input:focus, select:focus {
+    outline: 2px solid #007BFF;
+    outline-offset: 2px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Smooth transitions */
+* {
+    transition: all 0.3s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    .image-gallery, .editor {
+        width: 100%;
+    }
 }
