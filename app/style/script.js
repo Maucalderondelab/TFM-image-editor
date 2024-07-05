@@ -6,11 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyEffectButton = document.getElementById('apply-effect-button');
     const editedResults = document.getElementById('edited-results');
 
+
+    // Function to handle image selection
+    function selectImage(image) {
+        selectedImageDisplay.src = `/test_images/${image}`;
+        selectedImageDisplay.alt = image;
+        selectedImageNameInput.value = image;
+        editButton.disabled = false;
+
+    }
+    
     // Function to fetch and display images
     function fetchImages() {
         fetch('/images')
             .then(response => response.json())
             .then(images => {
+                const imageGallery = document.getElementById('image-gallery');
                 imageGallery.innerHTML = ''; // Clear existing images
                 images.forEach((image) => {
                     const imageItem = document.createElement('div');
@@ -26,13 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Error fetching images:', error));
     }
 
-    // Function to handle image selection
-    function selectImage(image) {
-        selectedImageDisplay.src = `/test_images/${image}`;
-        selectedImageDisplay.alt = image;
-        selectedImageNameInput.value = image;
-    }
-
     // Function to apply black and white effect
     function applyBlackAndWhiteEffect(event) {
         event.preventDefault();
@@ -40,11 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fetch('/edit-image', {
             method: 'POST',
-            body: formData
+            body: formData,
+            // headers: {
+            //     'Accept': 'application/json',
+            // }
         })
-        .then(response => response.text())
-        .then(editedImageUrl => {
-            // Add the edited image to the results
+        .then(response => response.json())
+        .then(data => {
+            const editedImageUrl = data.edited_image_url;
+            editedResults.innerHTML = '';  // Clear previous edited image
             const editedItem = document.createElement('div');
             editedItem.classList.add('edited-item');
             editedItem.innerHTML = `<img src="${editedImageUrl}" alt="Edited Image">`;
