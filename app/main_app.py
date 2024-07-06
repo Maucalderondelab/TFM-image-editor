@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+import time
 
 
 import os
@@ -45,6 +46,7 @@ async def get_images():
     images = [f for f in os.listdir(test_images_dir) if os.path.isfile(os.path.join(test_images_dir, f))]
     return images
 
+
 @app.post("/edit-image")
 async def edit_image(image_name: str = Form(...)):
     print(f"Received image_name: {image_name}")
@@ -52,13 +54,13 @@ async def edit_image(image_name: str = Form(...)):
     if not os.path.exists(image_path):
         raise HTTPException(status_code=404, detail="Image not found")
 
-# Generate a new filename with a timestamp
-    edited_image_name = "edited_image.jpg"
+    # Generate a new filename with a timestamp
+    timestamp = int(time.time())
+    edited_image_name = f"edited_{timestamp}_{image_name}"
     edited_image_path = os.path.join(edited_images_dir, edited_image_name)
     
     convert_to_black_and_white(image_path, edited_image_path)
     return JSONResponse(content={"edited_image_url": f"/edited_images/{edited_image_name}"})
-
 @app.get("/edited_images/{filename}")
 async def get_edited_image(filename: str):
     file_path = os.path.join(edited_images_dir, filename)
