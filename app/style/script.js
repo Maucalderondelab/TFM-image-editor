@@ -34,20 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     imageGallery.appendChild(imageItem);
                 });
             })
-            .catch(error => console.error('Error fetching images:', error));
+            .catch(error => {
+                console.error('Error applying effect:', error);
+                editedResults.innerHTML = `<p>Error: ${error.message}</p>`;
+            });
     }
 
     // Function to apply black and white effect
     function applyBlackAndWhiteEffect(event) {
         event.preventDefault();
         const formData = new FormData(editForm);
-
+    
         fetch('/edit-image', {
             method: 'POST',
             body: formData,
-            // headers: {
-            //     'Accept': 'application/json',
-            // }
         })
         .then(response => response.json())
         .then(data => {
@@ -57,8 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
             editedItem.classList.add('edited-item');
             editedItem.innerHTML = `<img src="${editedImageUrl}" alt="Edited Image">`;
             editedResults.appendChild(editedItem);
+            
+            // Update the selected image display with the edited image
+            selectedImageDisplay.src = editedImageUrl;
         })
-        .catch(error => console.error('Error applying effect:', error));
+        .catch(error => {
+            console.error('Error applying effect:', error);
+            editedResults.innerHTML = `<p>Error: ${error.message}</p>`;
+        });
     }
 
     // Fetch and display images on page load
