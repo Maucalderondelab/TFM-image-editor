@@ -14,12 +14,16 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+if torch.cuda.is_available():
+    print(f"CUDA device: {torch.cuda.get_device_name(0)}")
+    
 if __name__ == "__main__":
     torch.cuda.empty_cache()
     
     # IMAGE_PATH = '/workspace/images/fox.jpg'
-    IMAGE_PATH = '/workspace/images/dogs.jpg'
+    IMAGE_PATH = '/workspace/test_images/1.jpg'
     MASK_OUTPUT_PATH = '/workspace/outputs/masks'
     EDITED_IMAGE_OUTPUT_PATH = '/workspace/outputs/edited_images'
 
@@ -32,7 +36,7 @@ if __name__ == "__main__":
     # Load GroundingDINO model
     original_cwd = os.getcwd()
     os.chdir('GroundingDINO')
-    from groundingdino.util.inference import (
+    from GroundingDINO.groundingdino.util.inference import (
         load_model,
         load_image,
         predict,
@@ -47,6 +51,11 @@ if __name__ == "__main__":
     
     # Load GroundingDINO model
     grounding_dino = GroundingDINO(grounding_dino_model)
+    # Print initial CUDA information
+    if torch.cuda.is_available():
+        print(f"Initial GPU memory allocated: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
+    else:
+        print("CUDA not available. Using CPU.")
 
     # Load image
     image_bgr = cv2.imread(IMAGE_PATH)
@@ -54,11 +63,8 @@ if __name__ == "__main__":
     # Process image with GroundingDINO
     detections = process_image_with_grounding_dino(grounding_dino, image_bgr, TEXT_PROMPT)
 
-#     # Visualize detections
-#     grounding_dino.visualize_detections(image_bgr, detections)
-
     # Instantiate SAMSegmenter
-    sam_segmenter = SAMSegmenter(checkpoint_path=SAM_CHECKPOINT_PATH, model_type='vit_h', device='cuda')
+    sam_segmenter = SAMSegmenter(checkpoint_path=SAM_CHECKPOINT_PATH, model_type='vit_h', device=device)
 
     # Segment using SAM
     detections.mask = sam_segmenter.segment(image=image_bgr, xyxy=detections.xyxy)
@@ -70,7 +76,7 @@ if __name__ == "__main__":
 
     # Initialize StableDiffusionInpainter
         STABLE_DIFFUSION_MODEL_PATH = "stabilityai/stable-diffusion-2-inpainting"
-        sd_inpainter = StableDiffusionInpainter(STABLE_DIFFUSION_MODEL_PATH, torch_dtype=torch.float16, device='cuda')
+        sd_inpainter = StableDiffusionInpainter(STABLE_DIFFUSION_MODEL_PATH, device=device)
         
     # Plot images with masks overlaid
     plot_images_grid(
@@ -101,13 +107,7 @@ if __name__ == "__main__":
         edited_image_path = os.path.join(EDITED_IMAGE_OUTPUT_PATH, 'outpainted_image.png')
         generated_image.save(edited_image_path)
         print(f"Outpainted image saved at {edited_image_path}")
-        # generated_image
-        # # Display generated image
-        # plt.figure(figsize=(8, 8))
-        # plt.imshow(generated_image)
-        # plt.title('Generated Image')
-        # plt.axis('off')
-        # plt.show()
+   
     else: 
         
         # Prepare inputs for inpainting
