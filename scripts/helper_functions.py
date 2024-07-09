@@ -28,43 +28,41 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 ###########################################################################################################
 class GroundingDINO:
     def __init__(self, model):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model
         self.BOX_THRESHOLD = 0.35
         self.TEXT_THRESHOLD = 0.25
-    
+        
     def predict_with_captions(self, image, text_prompt):
-        # Assuming self.model.predict_with_caption returns detections and phrases
-        detections, phrases = self.model.predict_with_caption(
-            image=image,
-            caption=text_prompt,
-            box_threshold=self.BOX_THRESHOLD,
-            text_threshold=self.TEXT_THRESHOLD,
-        )
+        # Ensure image is in BGR format
+        if image.shape[2] == 3 and image.dtype == 'uint8':
+            image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        else:
+            image_bgr = image  # Assume it's already in BGR format
+        
+        # Perform prediction
+        if torch.cuda.is_available():
+            with torch.cuda.amp.autocast(enabled=True):
+                detections, phrases = self.model.predict_with_caption(
+                    image=image_bgr,
+                    caption=text_prompt,
+                    box_threshold=self.BOX_THRESHOLD,
+                    text_threshold=self.TEXT_THRESHOLD,
+                )
+        else:
+            detections, phrases = self.model.predict_with_caption(
+                image=image_bgr,
+                caption=text_prompt,
+                box_threshold=self.BOX_THRESHOLD,
+                text_threshold=self.TEXT_THRESHOLD,
+            )
+        
+        # Print GPU memory usage if CUDA is available
+        if torch.cuda.is_available():
+            print(f"GPU memory used: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
+        
         return detections, phrases
     
-    def visualize_detections(self, image, detections):
-        # Visualize detections as before
-        image_with_boxes = image.copy()
-        for i, box in enumerate(detections.xyxy):
-            x_min, y_min, x_max, y_max = map(int, box)
-            class_id = detections.data[i]['class_id']
-            cv2.rectangle(image_with_boxes, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
-            cv2.putText(image_with_boxes, class_id, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image_with_boxes_rgb = cv2.cvtColor(image_with_boxes, cv2.COLOR_BGR2RGB)
-
-        plt.figure(figsize=(10, 10))
-        plt.imshow(image_rgb)
-        plt.title('Original Image')
-        plt.axis('off')
-        plt.show()
-
-        plt.figure(figsize=(10, 10))
-        plt.imshow(image_with_boxes_rgb)
-        plt.title('Image with Detections')
-        plt.axis('off')
-        plt.show()
 ###########################################################################################################
 ###########################################################################################################
 # SAM
@@ -87,10 +85,18 @@ class SAMSegmenter:
     def segment(self, image, xyxy):
         self.sam_predictor.set_image(image)
         result_masks = []
+        # Convert xyxy to numpy array if it's a tensor
+        if isinstance(xyxy, torch.Tensor):
+            xyxy = xyxy.cpu().numpy()
+        print(f"GPU memory before segmentation: {torch.cuda.memory_allocated() / 1e6:.2f} MB")
         for box in xyxy:
-            masks, scores, logits = self.sam_predictor.predict(box=box, multimask_output=True)
+            masks, scores, logits = self.sam_predictor.predict(
+                box=box,
+                multimask_output=True
+            )
             index = np.argmax(scores)
             result_masks.append(masks[index])
+        print(f"GPU memory after segmentation: {torch.cuda.memory_allocated() / 1e6:.2f} MB")
         return np.array(result_masks)
     
     def make_sam_mask(self, boolean_mask):
@@ -126,6 +132,8 @@ class SAMSegmenter:
 class StableDiffusionInpainter:
     def __init__(self, pretrained_model_path, torch_dtype=torch.float16, device='cuda'):
         self.device = device
+        self.torch_dtype = torch_dtype
+        
         self.pipe = StableDiffusionInpaintPipeline.from_pretrained(
             pretrained_model_path,
             torch_dtype=torch_dtype,
