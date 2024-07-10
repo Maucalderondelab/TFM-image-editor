@@ -8,9 +8,10 @@ body {
 
 /* Header styling */
 header {
-    display: flex;
-    justify-content: space-between;
+    background-color: #007BFF;
+    color: white;
     padding: 20px;
+    text-align: center;
 }
 
 /* Container to hold the image gallery and editor */
@@ -25,21 +26,20 @@ header {
 /* Image gallery styling */
 .image-gallery {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(6, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 10px;
-    background-color: #f0f0f0;
+    background-color: #fff;
     padding: 20px;
     width: 65%;
-    height: 90vh;
+    height: 80vh;
     overflow-y: auto;
     box-sizing: border-box;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Image gallery item styling */
 .image-item {
-    width: 256px;
-    height: 256px;
     aspect-ratio: 1 / 1;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     cursor: pointer;
@@ -48,7 +48,8 @@ header {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: border-color 0.3s;
+    transition: transform 0.3s;
+    border-radius: 4px;
 }
 
 .image-item:hover {
@@ -65,6 +66,9 @@ header {
 .image-item div {
     padding: 5px;
     text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    width: 100%;
 }
 
 /* Editor section styling */
@@ -73,12 +77,15 @@ header {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Selected image container styling */
 #selected-image {
-    width: 300px;
-    height: 300px;
+    width: 100%;
     aspect-ratio: 1 / 1;
     border: 2px solid #007BFF;
     border-radius: 4px;
@@ -86,32 +93,18 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fff;
+    background-color: #f8f8f8;
 }
 
-/* Selected image styling with default state */
-#selected-image img {
-    width: 300px;
-    height: 300px;
-    object-fit: cover;
-}
-
-/* Black and white effect class */
-.black-and-white {
-    filter: grayscale(100%);
-}
-
-/* Input styling */
-input[type="text"] {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
+/* Selected image styling */
+#selected-image-display {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 /* Button styling */
-#apply-effect-button, #prompt-saved-button {
+#edit-button, #save-edited-image-button {
     background-color: #007BFF;
     color: white;
     border: none;
@@ -119,41 +112,43 @@ input[type="text"] {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    width: 100%;
 }
 
-#apply-effect-button:hover, #prompt-saved-button:hover {
+#edit-button:hover, #save-edited-image-button:hover {
     background-color: #0056b3;
 }
 
-/* Edited results section styling */
-#image-edited, .edited-results {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f8f9fa;
-    color: #333;
+#edit-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 }
 
-/* Edited item styling */
-.edited-item {
-    margin: 10px;
-    display: inline-block;
-}
-
-.edited-item img {
+/* Edited image container styling */
+#edited-image-container{
     width: 300px;
     height: 300px;
-    object-fit: cover;
-    border: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-/* Focus styles for accessibility */
-button:focus, input:focus, select:focus {
-    outline: 2px solid #007BFF;
-    outline-offset: 2px;
+
+#edited-image-display img{
+    width: 300px;
+    height: 300px;
+    object-fit: contain;
+    border: 2px solid #28a745;
+    border-radius: 4px;
+}
+
+/* Error message styling */
+#error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
 }
 
 /* Scrollbar styling */
@@ -172,11 +167,6 @@ button:focus, input:focus, select:focus {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
-}
-
-/* Smooth transitions */
-* {
-    transition: all 0.3s ease;
 }
 
 /* Responsive design */

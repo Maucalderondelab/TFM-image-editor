@@ -3,25 +3,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedImageDisplay = document.getElementById('selected-image-display');
     const editForm = document.getElementById('edit-form');
     const selectedImageNameInput = document.getElementById('selected-image-name');
-    const applyEffectButton = document.getElementById('apply-effect-button');
-    const editedResults = document.getElementById('edited-results');
+    const editButton = document.getElementById('edit-button');
+    const saveEditedImageButton = document.getElementById('save-edited-image-button');
+    const editedImageDisplay = document.getElementById('edited-image-display');
+    const errorMessage = document.getElementById('error-message');
+    const editedImageContainer = document.getElementById('edited-image-container');
 
-
-    // Function to handle image selection
     function selectImage(image) {
         selectedImageDisplay.src = `/test_images/${image}`;
         selectedImageDisplay.alt = image;
         selectedImageNameInput.value = image;
         editButton.disabled = false;
-
+        editedImageDisplay.style.display = 'none';
+        saveButton.disabled = true;
     }
-    
-    // Function to fetch and display images
+
     function fetchImages() {
         fetch('/images')
             .then(response => response.json())
             .then(images => {
-                const imageGallery = document.getElementById('image-gallery');
                 imageGallery.innerHTML = ''; // Clear existing images
                 images.forEach((image) => {
                     const imageItem = document.createElement('div');
@@ -34,42 +34,73 @@ document.addEventListener('DOMContentLoaded', () => {
                     imageGallery.appendChild(imageItem);
                 });
             })
-            .catch(error => {
-                console.error('Error applying effect:', error);
-                editedResults.innerHTML = `<p>Error: ${error.message}</p>`;
-            });
+            .catch(error => displayError('Error loading images. Please try again.'));
     }
 
-    // Function to apply black and white effect
-    function applyBlackAndWhiteEffect(event) {
+    function previewEdit(event) {
         event.preventDefault();
         const formData = new FormData(editForm);
     
-        fetch('/edit-image', {
+        fetch('/preview-edit', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.detail || 'Unknown error');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.edited_image_data) {
+                editedImageDisplay.src = data.edited_image_data;
+                editedImageDisplay.style.display = 'block';
+                editedImageContainer.style.display = 'block';
+                saveEditedImageButton.disabled = false;
+            } else {
+                displayError('No valid edited image data received');
+            }
+        })
+        .catch(error => displayError(`Error applying effect: ${error.message}. Please try again.`));
+    }
+    
+
+    function saveEditedImage() {
+        const formData = new FormData();
+        formData.append('image_name', selectedImageNameInput.value);
+        formData.append('edited_image_data', editedImageDisplay.src);
+
+        fetch('/save-edit', {
             method: 'POST',
             body: formData,
         })
         .then(response => response.json())
         .then(data => {
-            const editedImageUrl = data.edited_image_url;
-            editedResults.innerHTML = '';  // Clear previous edited image
-            const editedItem = document.createElement('div');
-            editedItem.classList.add('edited-item');
-            editedItem.innerHTML = `<img src="${editedImageUrl}" alt="Edited Image">`;
-            editedResults.appendChild(editedItem);
-            
-            // Update the selected image display with the edited image
-            selectedImageDisplay.src = editedImageUrl;
+            if (data && data.saved_image_url) {
+                alert('Image saved successfully!');
+                // Optionally, you can update the UI to show the saved image or its path
+            } else {
+                displayError('Error saving the edited image');
+            }
         })
-        .catch(error => {
-            console.error('Error applying effect:', error);
-            editedResults.innerHTML = `<p>Error: ${error.message}</p>`;
-        });
+        .catch(error => displayError('Error saving image. Please try again.'));
     }
 
-    // Fetch and display images on page load
-    fetchImages();
+    function displayError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000); // Hide error after 5 seconds
+    }
 
-    // Event listener for the edit form submission
-    editForm.addEventListener('submit', applyBlackAndWhiteEffect);
+    // Event listeners
+    fetchImages(); // Load images when the page loads
+    editForm.addEventListener('submit', previewEdit);
+    saveEditedImageButton.addEventListener('click', saveEditedImage);
+
+    // Optional: Refresh images periodically
+    setInterval(fetchImages, 60000); // Refresh every minute
 });

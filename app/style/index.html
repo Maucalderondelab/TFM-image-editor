@@ -16,16 +16,17 @@
         </div>
         <div class="editor">
             <div id="selected-image">
-                <img id="selected-image-display" src="" alt="Selected Image" style="width: 100%; height: 100%; object-fit: cover;">
+                <img id="selected-image-display" src="" alt="Selected Image">
             </div>
-            <button id="prompt-saved-button">Prompt saved</button>
             <form id="edit-form">
                 <input type="hidden" id="selected-image-name" name="image_name">
-                <button type="submit" id="apply-effect-button">Apply Black and White Effect</button>
+                <button type="submit" id="edit-button" disabled>Apply Black and White Effect</button>
             </form>
-            <div id="edited-results">
-                <img id="edited-image-display" src="" alt="Edited Image" style="max-width: 100%;">
+            <div id="edited-image-container" style="display: none;">
+                <img id="edited-image-display" src="" alt="Edited Image">
+                <button id="save-edited-image-button">Save Edited Image</button>
             </div>
+            <div id="error-message" style="display: none;"></div>
         </div>
     </div>
     <script src="/style/script.js"></script>
