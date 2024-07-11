@@ -20,9 +20,10 @@
             </div>
             <form id="edit-form">
                 <input type="hidden" id="selected-image-name" name="image_name">
-                <button type="submit" id="edit-button" disabled>Apply Black and White Effect</button>
+                <input type="text" id="prompt-input" name="prompt" placeholder="Enter effect prompt">
+                <button type="submit" id="edit-button" disabled>Apply Effect</button>
             </form>
-            <div id="edited-image-container" style="display: none;">
+            <div id="edited-image-container">
                 <img id="edited-image-display" src="" alt="Edited Image">
                 <button id="save-edited-image-button">Save Edited Image</button>
             </div>

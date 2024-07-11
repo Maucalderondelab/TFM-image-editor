@@ -17,25 +17,18 @@ header {
 /* Container to hold the image gallery and editor */
 .container {
     display: flex;
-    gap: 20px;
     padding: 20px;
-    width: 100%;
-    box-sizing: border-box;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Image gallery styling */
 .image-gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    background-color: #fff;
-    padding: 20px;
-    width: 65%;
-    height: 80vh;
-    overflow-y: auto;
-    box-sizing: border-box;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 50%;
+    padding-right: 20px;
 }
 
 /* Image gallery item styling */
@@ -125,20 +118,17 @@ header {
 }
 
 /* Edited image container styling */
-#edited-image-container{
+/* .edited-image-container{
     width: 300px;
     height: 300px;
-    display: flex;
     flex-direction: column;
     gap: 10px;
-}
+} */
 
-#edited-image-display img{
-    width: 300px;
-    height: 300px;
+#edited-image-display i{
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
-    border: 2px solid #28a745;
-    border-radius: 4px;
 }
 
 /* Error message styling */

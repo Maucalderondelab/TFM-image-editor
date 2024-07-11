@@ -8,14 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const editedImageDisplay = document.getElementById('edited-image-display');
     const errorMessage = document.getElementById('error-message');
     const editedImageContainer = document.getElementById('edited-image-container');
+    const propmptInput = document.getElementById('prompt-input');
 
     function selectImage(image) {
         selectedImageDisplay.src = `/test_images/${image}`;
         selectedImageDisplay.alt = image;
         selectedImageNameInput.value = image;
-        editButton.disabled = false;
+        editButton.disabled = !promptInput.value.trim(); // Only enable if there's a prompt
         editedImageDisplay.style.display = 'none';
-        saveButton.disabled = true;
+        saveEditedImageButton.disabled = true;
     }
 
     function fetchImages() {
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function previewEdit(event) {
         event.preventDefault();
         const formData = new FormData(editForm);
+        formData.append('prompt', promptInput.value);
     
         fetch('/preview-edit', {
             method: 'POST',
@@ -100,6 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchImages(); // Load images when the page loads
     editForm.addEventListener('submit', previewEdit);
     saveEditedImageButton.addEventListener('click', saveEditedImage);
+
+    // New event listener for prompt input
+    promptInput.addEventListener('input', () => {
+        editButton.disabled = !promptInput.value.trim() || !selectedImageNameInput.value;
+    });
+
+    // Disable edit button by default
+    editButton.disabled = true;
 
     // Optional: Refresh images periodically
     setInterval(fetchImages, 60000); // Refresh every minute
