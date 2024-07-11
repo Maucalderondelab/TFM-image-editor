@@ -2,8 +2,7 @@ from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.image_processing import convert_to_black_and_white
-from PIL import Image
+from app.image_processing import edit_image_func
 import os
 import base64
 import io
@@ -53,22 +52,22 @@ async def get_images():
     return images
 
 @app.post("/preview-edit")
-async def preview_edit(image_name: str = Form(...)):
+async def preview_edit(image_name: str = Form(...), prompt: str = Form(...)):
     try:
-        logger.info(f"Received preview edit request for image: {image_name}")
+        logger.info(f"Received preview edit request for image: {image_name} with prompt: {prompt}")
         image_path = os.path.join(test_images_dir, image_name)
         if not os.path.exists(image_path):
             logger.error(f"Image not found: {image_path}")
             raise HTTPException(status_code=404, detail="Image not found")
 
-        logger.info(f"Converting image to black and white: {image_path}")
-        bw_image = convert_to_black_and_white(image_path)
-        
+        logger.info(f"Applying custom edit to image: {image_path}")
+        edited_image = edit_image_func(image_path, prompt)
+
         buffered = io.BytesIO()
-        bw_image.save(buffered, format="PNG")
+        edited_image.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
         
-        logger.info("Successfully converted and encoded image")
+        logger.info("Successfully edited and encoded image")
         return JSONResponse(content={"edited_image_data": f"data:image/png;base64,{img_str}"})
     except Exception as e:
         logger.error(f"Error in preview_edit: {str(e)}")
