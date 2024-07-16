@@ -8,6 +8,7 @@ import base64
 import io
 import time
 import logging
+from typing import List, Dict, Any
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -25,37 +26,52 @@ app.add_middleware(
 )
 
 # Get the directory of the current file
-current_dir = os.path.dirname(os.path.abspath(__file__))
+current_dir: str = os.path.dirname(os.path.abspath(__file__))
 
 # Mount static directories
-style_dir = os.path.join(current_dir, "style")
+style_dir: str = os.path.join(current_dir, "style")
 app.mount("/style", StaticFiles(directory=style_dir), name="style")
 
-test_images_dir = "/home/mauricio/Documents/Projects/TFM/test_images"
+test_images_dir: str = "/home/mauricio/Documents/Projects/TFM/test_images"
 app.mount("/test_images", StaticFiles(directory=test_images_dir), name="test_images")
 
-edited_images_dir = "/home/mauricio/Documents/Projects/TFM/edited_images"
+edited_images_dir: str = "/home/mauricio/Documents/Projects/TFM/edited_images"
 app.mount("/edited_images", StaticFiles(directory=edited_images_dir), name="edited_images")
 
 # Ensure edited_images directory exists
 os.makedirs(edited_images_dir, exist_ok=True)
 
 @app.get("/")
-async def read_index():
+async def read_index() -> FileResponse:
+    """Serve the index.html file."""
     return FileResponse(os.path.join(style_dir, 'index.html'))
 
 @app.get("/images")
-async def get_images():
+async def get_images() -> List[str]:
+    """Fetch and return a list of image filenames."""
     logger.info("Fetching list of images")
-    images = [f for f in os.listdir(test_images_dir) if os.path.isfile(os.path.join(test_images_dir, f))]
+    images: List[str] = [f for f in os.listdir(test_images_dir) if os.path.isfile(os.path.join(test_images_dir, f))]
     logger.info(f"Found {len(images)} images")
     return images
 
 @app.post("/preview-edit")
-async def preview_edit(image_name: str = Form(...), prompt: str = Form(...)):
+async def preview_edit(image_name: str = Form(...), prompt: str = Form(...)) -> JSONResponse:
+    """
+    Preview an edited image based on the provided image name and prompt.
+
+    Args:
+        image_name (str): The name of the image file to edit.
+        prompt (str): The text prompt to add to the image.
+
+    Returns:
+        JSONResponse: A JSON response containing the base64 encoded edited image data.
+
+    Raises:
+        HTTPException: If the image is not found or if there's an error during processing.
+    """
     try:
         logger.info(f"Received preview edit request for image: {image_name} with prompt: {prompt}")
-        image_path = os.path.join(test_images_dir, image_name)
+        image_path: str = os.path.join(test_images_dir, image_name)
         if not os.path.exists(image_path):
             logger.error(f"Image not found: {image_path}")
             raise HTTPException(status_code=404, detail="Image not found")
@@ -63,9 +79,9 @@ async def preview_edit(image_name: str = Form(...), prompt: str = Form(...)):
         logger.info(f"Applying custom edit to image: {image_path}")
         edited_image = edit_image_func(image_path, prompt)
 
-        buffered = io.BytesIO()
+        buffered: io.BytesIO = io.BytesIO()
         edited_image.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
+        img_str: str = base64.b64encode(buffered.getvalue()).decode()
         
         logger.info("Successfully edited and encoded image")
         return JSONResponse(content={"edited_image_data": f"data:image/png;base64,{img_str}"})
@@ -74,19 +90,32 @@ async def preview_edit(image_name: str = Form(...), prompt: str = Form(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/save-edit")
-async def save_edit(image_name: str = Form(...), edited_image_data: str = Form(...)):
+async def save_edit(image_name: str = Form(...), edited_image_data: str = Form(...)) -> JSONResponse:
+    """
+    Save an edited image.
+
+    Args:
+        image_name (str): The name of the original image file.
+        edited_image_data (str): The base64 encoded edited image data.
+
+    Returns:
+        JSONResponse: A JSON response containing the URL of the saved image.
+
+    Raises:
+        HTTPException: If there's an error during the saving process.
+    """
     try:
         logger.info(f"Received save edit request for image: {image_name}")
         # Remove the data URL prefix
-        image_data = edited_image_data.split(',')[1]
+        image_data: str = edited_image_data.split(',')[1]
         
         # Decode the base64 image
-        image_bytes = base64.b64decode(image_data)
+        image_bytes: bytes = base64.b64decode(image_data)
         
         # Generate a filename for the saved image
-        timestamp = int(time.time())
-        saved_image_name = f"edited_{timestamp}_{image_name}"
-        saved_image_path = os.path.join(edited_images_dir, saved_image_name)
+        timestamp: int = int(time.time())
+        saved_image_name: str = f"edited_{timestamp}_{image_name}"
+        saved_image_path: str = os.path.join(edited_images_dir, saved_image_name)
         
         # Save the image
         logger.info(f"Saving edited image to: {saved_image_path}")
@@ -100,8 +129,20 @@ async def save_edit(image_name: str = Form(...), edited_image_data: str = Form(.
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/edited_images/{filename}")
-async def get_edited_image(filename: str):
-    file_path = os.path.join(edited_images_dir, filename)
+async def get_edited_image(filename: str) -> FileResponse:
+    """
+    Serve an edited image file.
+
+    Args:
+        filename (str): The name of the edited image file.
+
+    Returns:
+        FileResponse: The requested image file.
+
+    Raises:
+        HTTPException: If the requested file is not found.
+    """
+    file_path: str = os.path.join(edited_images_dir, filename)
     if os.path.exists(file_path):
         return FileResponse(file_path)
     logger.error(f"Edited image not found: {file_path}")
