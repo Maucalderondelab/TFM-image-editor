@@ -8,15 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const editedImageDisplay = document.getElementById('edited-image-display');
     const errorMessage = document.getElementById('error-message');
     const editedImageContainer = document.getElementById('edited-image-container');
-    const propmptInput = document.getElementById('prompt-input');
+    const promptInput = document.getElementById('prompt-input');
 
     function selectImage(image) {
         selectedImageDisplay.src = `/test_images/${image}`;
         selectedImageDisplay.alt = image;
         selectedImageNameInput.value = image;
-        editButton.disabled = !promptInput.value.trim(); // Only enable if there's a prompt
+        updateEditButtonState();
         editedImageDisplay.style.display = 'none';
         saveEditedImageButton.disabled = true;
+    }
+
+    function updateEditButtonState() {
+        editButton.disabled = !promptInput.value.trim() || !selectedImageNameInput.value;
     }
 
     function fetchImages() {
@@ -67,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => displayError(`Error applying effect: ${error.message}. Please try again.`));
     }
-    
 
     function saveEditedImage() {
         const formData = new FormData();
@@ -102,14 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchImages(); // Load images when the page loads
     editForm.addEventListener('submit', previewEdit);
     saveEditedImageButton.addEventListener('click', saveEditedImage);
+    promptInput.addEventListener('input', updateEditButtonState);
 
-    // New event listener for prompt input
-    promptInput.addEventListener('input', () => {
-        editButton.disabled = !promptInput.value.trim() || !selectedImageNameInput.value;
-    });
-
-    // Disable edit button by default
-    editButton.disabled = true;
+    // Initial state
+    updateEditButtonState();
 
     // Optional: Refresh images periodically
     setInterval(fetchImages, 60000); // Refresh every minute
