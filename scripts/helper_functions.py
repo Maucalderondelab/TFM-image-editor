@@ -6,6 +6,7 @@ from typing import List
 from PIL import Image
 from skimage import measure
 import cv2
+from typing import Tuple, List, Any, Dict, Union, Optional
 
 import torch
 import transformers
@@ -14,8 +15,11 @@ import accelerate
 import os
 import sys
 import torch
+from scripts.setup import GROUNDING_DINO_CONFIG_PATH, GROUNDING_DINO_CHECKPOINT_PATH, SAM_CHECKPOINT_PATH
+
 from diffusers import StableDiffusionInpaintPipeline
 from segment_anything import SamPredictor, sam_model_registry, SamAutomaticMaskGenerator
+from groundingdino.util.inference import  Model
 
 import warnings
 # Suppress specific warnings
@@ -27,13 +31,13 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 ###########################################################################################################
 ###########################################################################################################
 class GroundingDINO:
-    def __init__(self, model):
+    def __init__(self, model) -> None:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = model
         self.BOX_THRESHOLD = 0.35
         self.TEXT_THRESHOLD = 0.25
         
-    def predict_with_captions(self, image, text_prompt):
+    def predict_with_captions(self, image: np.ndarray , text_prompt: str)-> Tuple[np.ndarray, List[str]]:
         # Ensure image is in BGR format
         if image.shape[2] == 3 and image.dtype == 'uint8':
             image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
@@ -70,7 +74,7 @@ class GroundingDINO:
 ###########################################################################################################
 
 class SAMSegmenter:
-    def __init__(self, checkpoint_path, model_type='vit_h', device='cuda'):
+    def __init__(self, checkpoint_path: str, model_type:str ='vit_h', device: str ='cuda')-> None:
         self.checkpoint_path = checkpoint_path
         self.model_type = model_type
         self.device = device
@@ -82,7 +86,7 @@ class SAMSegmenter:
         self.sam_predictor = SamPredictor(self.sam_model)
         self.mask_generator = SamAutomaticMaskGenerator(self.sam_model)
     
-    def segment(self, image, xyxy):
+    def segment(self, image: np.ndarray, xyxy: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
         self.sam_predictor.set_image(image)
         result_masks = []
         # Convert xyxy to numpy array if it's a tensor
@@ -99,7 +103,7 @@ class SAMSegmenter:
         print(f"GPU memory after segmentation: {torch.cuda.memory_allocated() / 1e6:.2f} MB")
         return np.array(result_masks)
     
-    def make_sam_mask(self, boolean_mask):
+    def make_sam_mask(self, boolean_mask: np.ndarray) -> List[List[float]]:
         binary_mask = boolean_mask.astype(int)
         contours = measure.find_contours(binary_mask, 0.5)
         mask_points = []
@@ -109,7 +113,7 @@ class SAMSegmenter:
             mask_points.append(segmentation)
         return mask_points
     
-    def make_annotations(self, detections):
+    def make_annotations(self, detections: 'Detections') -> Optional[List[Dict[str, Union[str, List[Dict[str, Union[str, float, List[List[float]]]]]]]]]:
         if len(detections.xyxy) == 0:
             return None
 
@@ -130,7 +134,7 @@ class SAMSegmenter:
 ###########################################################################################################
 ###########################################################################################################
 class StableDiffusionInpainter:
-    def __init__(self, pretrained_model_path, torch_dtype=torch.float16, device='cuda'):
+    def __init__(self, pretrained_model_path: str, torch_dtype: torch.dtype = torch.float16, device: str = 'cuda') -> None:        
         self.device = device
         self.torch_dtype = torch_dtype
         
@@ -139,8 +143,7 @@ class StableDiffusionInpainter:
             torch_dtype=torch_dtype,
         ).to(device)
         
-    def generate_image(self, image, mask, prompt, negative_prompt, seed):
-        # Resize for inpainting
+    def generate_image(self, image: Image.Image, mask: Image.Image, prompt: str, negative_prompt: str, seed: int) -> Image.Image:        # Resize for inpainting
         w, h = image.size
         in_image = image.resize((512, 512))
         in_mask = mask.resize((512, 512))
@@ -162,20 +165,20 @@ class StableDiffusionInpainter:
 # OTHER FUNCTIONS
 ###########################################################################################################
 ###########################################################################################################
-def load_grounding_dino_model(config_path, checkpoint_path):
+def load_grounding_dino_model(config_path: str, checkpoint_path: str) -> 'Model':
     grounding_dino_model = Model(
         model_config_path=config_path,
         model_checkpoint_path=checkpoint_path,
     )
     return grounding_dino_model
 
-def process_image_with_grounding_dino(grounding_dino, image, text_prompt):
+def process_image_with_grounding_dino(grounding_dino: 'GroundingDINO', image: np.ndarray, text_prompt: str) -> 'Detections':
     detections, phrases = grounding_dino.predict_with_captions(image, text_prompt)
     for i, phrase in enumerate(phrases):
         detections.data[i] = {'class_id': phrase}
     return detections
 
-def plot_images_grid(mask_dir, images, original_image, titles, grid_size, cmap="gray"):
+def plot_images_grid(mask_dir: str, images: List[np.ndarray], original_image: np.ndarray, titles: List[str], grid_size: Tuple[int, int], cmap: str = "gray") -> None:
     nrows, ncols = grid_size
 
     if len(images) > nrows * ncols:
@@ -194,7 +197,7 @@ def plot_images_grid(mask_dir, images, original_image, titles, grid_size, cmap="
     else:
         raise ValueError("The number of images exceeds 1.")
 
-def blend_image_and_mask(image, mask):
+def blend_image_and_mask(image: np.ndarray, mask: np.ndarray) -> np.ndarray:
     """
     Blend the original image and mask.
     :param image: Original image (RGB)
