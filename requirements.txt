@@ -13,3 +13,5 @@ opencv-python-headless==4.10.0.84
 scikit-image==0.24.0
 supervision==0.21.0
 addict==2.4.0
+fastapi==0.111.0
+uvicorn==0.30.1
