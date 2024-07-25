@@ -26,12 +26,12 @@ editing.
 - [X] Integrate SAM model
 - [X] Integrate Stable Diffusion model
 - [X] Combine the 3 in a single py file that is used with terminal
-- [ ] Create a demoapp with FastAPI v1 (Fully functional no editing image implemented)
-- [ ] Crate demo app v2, with the editing implementes
+- [X] Create a demoapp with FastAPI v1 (Fully functional no editing image implemented)
+- [X] Crate demo app v2, with the editing implementes
 - [ ] Look for improvments
 
 ## Testing
-- [ ] Perform unit tests
+- [X] Perform unit tests
 - [ ] Conduct user acceptance testing
 - [ ] Evaluate performance with various test cases
 
@@ -40,5 +40,5 @@ editing.
 - [x] Complete introduction section
 - [x] Draft methodology section
 - [ ] Models explanation
-- [ ] Diragrams
+- [X] Diragrams
 - [ ] Finalize README file
