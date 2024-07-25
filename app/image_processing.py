@@ -1,11 +1,28 @@
 from PIL import Image, ImageDraw, ImageFont
 import logging
 import os
+from typing import Union, Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def edit_image_func(input_image, prompt, output_path=None):
+def edit_image_func(input_image: Union[str, Image.Image], prompt: str, output_path: Optional[str] = None) -> Image.Image:
+    """
+    Edit an image by converting it to black and white and adding text.
+
+    Args:
+        input_image (Union[str, Image.Image]): Either a file path to an image or a PIL Image object.
+        prompt (str): The text to be added to the image.
+        output_path (Optional[str]): If provided, the path where the edited image will be saved.
+
+    Returns:
+        Image.Image: The edited PIL Image object.
+
+    Raises:
+        FileNotFoundError: If the input image file or font file is not found.
+        IOError: If there's an error opening or processing the image.
+        Exception: For any other unexpected errors during processing.
+    """
     try:
         if isinstance(input_image, str):
             # If input is a file path
@@ -45,6 +62,12 @@ def edit_image_func(input_image, prompt, output_path=None):
             edited_image.save(output_path)
 
         return edited_image
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {str(e)}")
+        raise
+    except IOError as e:
+        logger.error(f"IO error processing the image: {str(e)}")
+        raise
     except Exception as e:
-        logger.error(f"Error in edit_image_func: {str(e)}")
+        logger.error(f"Unexpected error in edit_image_func: {str(e)}")
         raise
