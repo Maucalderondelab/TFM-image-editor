@@ -2,7 +2,9 @@ from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.image_processing import edit_image_func
+# from image_processing import edit_image_func
+from function_app import edit_image_func
+
 import os
 import base64
 import io
@@ -32,10 +34,10 @@ current_dir: str = os.path.dirname(os.path.abspath(__file__))
 style_dir: str = os.path.join(current_dir, "style")
 app.mount("/style", StaticFiles(directory=style_dir), name="style")
 
-test_images_dir: str = "/home/mauricio/Documents/Projects/TFM/test_images"
+test_images_dir: str = "/root/app/test_images"
 app.mount("/test_images", StaticFiles(directory=test_images_dir), name="test_images")
 
-edited_images_dir: str = "/home/mauricio/Documents/Projects/TFM/edited_images"
+edited_images_dir: str = "/root/app/outputs/edited_images"
 app.mount("/edited_images", StaticFiles(directory=edited_images_dir), name="edited_images")
 
 # Ensure edited_images directory exists
@@ -75,7 +77,7 @@ async def preview_edit(image_name: str = Form(...), prompt: str = Form(...)) -> 
         if not os.path.exists(image_path):
             logger.error(f"Image not found: {image_path}")
             raise HTTPException(status_code=404, detail="Image not found")
-
+        
         logger.info(f"Applying custom edit to image: {image_path}")
         edited_image = edit_image_func(image_path, prompt)
 
